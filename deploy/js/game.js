@@ -54,6 +54,15 @@ nextFire=0,fireRate=200,score=0,oldScore=1,bulletCount=0,health=100,coins=1000,s
 function preload() {
  
    this.load.audio('instruction', 'assets/instructions.mp3'); 
+   this.load.audio('jumpaudio', 'assets/jump.mp3'); 
+   this.load.audio('pick', 'assets/pick.wav'); 
+   this.load.audio('destroy', 'assets/destroy.mp3'); 
+   this.load.audio('death', 'assets/death.wav'); 
+   this.load.audio('enterkey', 'assets/enterkey.mp3'); 
+
+   this.load.audio('attack', 'assets/attack.wav'); 
+   this.load.audio('bgmusic', 'assets/bgmusic.mp3'); 
+
 
    this.load.multiatlas('idle', 'assets/idle_guy.json', 'assets');
    this.load.multiatlas('run', 'assets/run_guy.json', 'assets');
@@ -92,7 +101,16 @@ function create() {
 
   this.add.image(512,384, 'background');
 
-
+  bgmusic=this.sound.add('bgmusic',{
+    mute: false,
+    volume: 1,
+    rate: 1,
+    detune: 0,
+    seek: 0,
+    loop: true,
+    delay: 0
+})
+bgmusic.play();
 
   title=this.add.image(512,384,'title')
   enter=this.add.image(512,500,'enter').setScale(0.8,0.8)
@@ -250,6 +268,8 @@ function acidDeath(){
 
 function sanTouch(){
     if(coins>=500){
+        this.sound.play('pick')
+
     bulletCount=10;
     coins-=500;
  sanText.setText(': ' + bulletCount+"mL");
@@ -261,6 +281,8 @@ money.setCollideWorldBounds(true)
 this.physics.add.collider(money, platforms);
 this.physics.add.overlap(player, money,moneyChange,null,this);
 function moneyChange(){
+    this.sound.play('pick')
+
     coins+=1000
     money.destroy()
 
@@ -273,11 +295,14 @@ function moneyChange(){
 
 
 function highJump(){
+    this.sound.play('jumpaudio')
     player.setVelocityY(-650)
 }
 
 function maskChange(){
     if(coins>=500){
+        this.sound.play('pick')
+
     coins-=500;
     mask.visible=false;
     mask.destroy();
@@ -441,10 +466,14 @@ function virusChange(virus,platforms){
     shield.setPosition(player.x,player.y)
 
 if(key.Enter.isDown && dead){
+    this.sound.play('enterkey')
+
     window.location.href=window.location.href
 }
 
     if(key.Enter.isDown && !this.gameStarted){
+        this.sound.play('enterkey')
+
         this.gameStarted=true;
         viral.children.iterate(function (child) {
 
@@ -481,6 +510,8 @@ virusVel=true;
                 
                 bulletCount--;
                 if(bulletCount>0){
+                    this.sound.play('attack')
+
                 sanText.setText(': ' + bulletCount+"mL");
 
                 nextFire = new Date().getTime() + fireRate;
@@ -491,6 +522,8 @@ virusVel=true;
 function bulletHit(virus,bullet){
     score++;
     total++;
+   // this.sound.play('destroy')
+
     scoreText.setText('Score: ' + total);
     bullet.disableBody(true,true);
     virus.disableBody(true,true);
@@ -506,6 +539,8 @@ function bulletHit(virus,bullet){
                 this.physics.add.collider(sanitizer, sanPlatform);
                 function sanTouch(){
                     if(coins>=500){
+                        this.sound.play('pick')
+
                     bulletCount=10;
                     coins-=500;
                     sanText.setText(': ' + bulletCount+"mL");
@@ -516,6 +551,8 @@ function bulletHit(virus,bullet){
                     this.physics.add.collider(money, platforms);
                     this.physics.add.overlap(player, money,moneyChange,null,this);
                     function moneyChange(){
+                        this.sound.play('pick')
+
                         coins+=1000
                         money.destroy()
                     
@@ -532,6 +569,8 @@ function bulletHit(virus,bullet){
                 this.physics.add.collider(mask, jump);
                 function maskChange(){
                     if(coins>=500){
+                        this.sound.play('pick')
+
                     coins-=500;
                     mask.visible=false;
                    mask.destroy();
@@ -543,6 +582,8 @@ function bulletHit(virus,bullet){
                     this.physics.add.collider(money, platforms);
                     this.physics.add.overlap(player, money,moneyChange,null,this);
                     function moneyChange(){
+                        this.sound.play('pick')
+
                         coins+=1000
                         money.destroy()
                     
@@ -577,8 +618,11 @@ function bulletHit(virus,bullet){
    if (cursors.up.isDown && player.body.touching.down)
    {
        player.setVelocityY(-430);
+      // this.sound.play('jumpaudio')
+
    }
 }else{
+
     player.setTexture('dead')
    
    creators=this.add.image(512,384,'creators')
