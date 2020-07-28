@@ -45,7 +45,9 @@ virusVel,
 key,
 enter,
 title,
-nextFire=0,fireRate=200,score=0,oldScore=1,bulletCount=0,health=0,coins=10000,shieldTime=0,added=true,add1=false,add2=false;
+dead=false,
+scoreText,total=0,medicineSupplied=false,
+nextFire=0,fireRate=200,score=0,oldScore=1,bulletCount=0,health=100,coins=1000,shieldTime=0,added=true,add1=false,add2=false;
 
 
 function preload() {
@@ -57,12 +59,20 @@ function preload() {
    this.load.multiatlas('idleL', 'assets/idleL_guy.json', 'assets');
    this.load.multiatlas('runL', 'assets/runL_guy.json', 'assets');
 
+   this.load.image('drop', 'assets/water.png');
+   this.load.image('coin', 'assets/coin.png');
+   this.load.image('money', 'assets/money.png');
+   this.load.image('heart', 'assets/heart.png');
+
    this.load.image('background', 'assets/1624.jpg');
    this.load.image('title', 'assets/title.png');
    this.load.image('computer', 'assets/computer.png');
    this.load.image('enter', 'assets/enter.png');
+   this.load.image('end', 'assets/end.png');
+   this.load.image('creators', 'assets/creators.png');
+
    this.load.image('jump', 'assets/jump.png');
-   this.load.image('capsules', 'assets/capsules.png');
+   this.load.image('capsules', 'assets/pills.png');
    this.load.image('shield', 'assets/shield.png');
    this.load.image('mask', 'assets/mask.png');
    this.load.image('virus', 'assets/virus.png');
@@ -72,12 +82,15 @@ function preload() {
    this.load.image('tile','assets/Tiles/Tile (2).png')
    this.load.image('tileSides','assets/Tiles/Tile (5).png')
    this.load.image('acid','assets/Tiles/Acid (2).png')
+   this.load.image('dead','assets/dead.png')
+
 }
 
 
 function create() {
 
   this.add.image(512,384, 'background');
+
 
 
   title=this.add.image(512,384,'title')
@@ -90,7 +103,25 @@ function create() {
   sidesR = this.physics.add.staticGroup();
   jump= this.physics.add.staticGroup();
   sanPlatform=this.physics.add.staticGroup();
- 
+  acid=this.physics.add.staticGroup();
+  stats=this.physics.add.staticGroup();
+
+  scoreText = this.add.text(35, 20, 'Score: 0', { fontSize: '20px', fill: '#000000',});
+scoreText.setStroke('#000000', 3);
+
+  stats.create(195,30, 'drop')
+  stats.create(335,30, 'coin')
+  stats.create(475,30, 'heart')
+
+  healthText = this.add.text(490, 20, ': 100', { fontSize: '20px', fill: '#000000' });
+  healthText.setStroke('#000000', 2);
+
+  sanText = this.add.text(205, 20, ': 0mL', { fontSize: '20px', fill: '#000000' });
+  sanText.setStroke('#000000', 2);
+
+  coinText = this.add.text(350, 20, ': 1000', { fontSize: '20px', fill: '#000000' });
+  coinText.setStroke('#000000', 2);
+
 
 
 
@@ -104,7 +135,7 @@ function create() {
 
   platforms.create(130,838,'tile')
   platforms.create(380,838,'tile')
-  platforms.create(635,838,'acid')
+  acid.create(635,838,'acid')
   platforms.create(890,838,'tile')
 
   this.physics.add.staticGroup().create(940,80,'portal')
@@ -156,6 +187,7 @@ sanitizer.setCollideWorldBounds(true)
    frameRate: 30,
    repeat: -1
 });
+
 var frameNames=this.anims.generateFrameNames('idle', { start: 1, end: 7,zeroPad: 1,
    prefix: 'Idle (', suffix: ').png'});
 this.anims.create({
@@ -178,27 +210,66 @@ this.anims.create({
 
 this.physics.add.collider(player, platforms);
 this.physics.add.collider(player, sanPlatform);
-this.physics.add.collider(player, sanitizer,sanTouch,null,this);
+this.physics.add.overlap(player, sanitizer,sanTouch,null,this);
 this.physics.add.collider(player, jump,highJump,null,this);
 
-this.physics.add.collider(player, mask,maskChange,null,this);
+this.physics.add.overlap(player, acid,acidDeath,null,this);
+
+this.physics.add.overlap(player, mask,maskChange,null,this);
+
+
 
 this.physics.add.collider(sanitizer, sanPlatform);
 this.physics.add.collider(platforms, mask);
 this.physics.add.collider(mask, jump);
 
 this.physics.add.collider(viral, platforms,virusChange,null,this);
+this.physics.add.collider(viral, acid,virusChange,null,this);
+
 this.physics.add.collider(viral, sidesL,virusChangeL,null,this);
 this.physics.add.collider(viral, sidesR,virusChangeR,null,this);
+
+this.physics.add.overlap(player, viral,virusAttack,null,this);
+
+function virusAttack(){
+    if(!shield.visible){
+    health=health-0.5;
+    if(health<=0){
+        dead=true;health=0;
+    player.setTexture('dead')
+    }
+}
+}
+
+function acidDeath(){
+    health=0;
+    dead=true;
+    player.setTexture('dead')
+}
 
 function sanTouch(){
     if(coins>=500){
     bulletCount=10;
     coins-=500;
+ sanText.setText(': ' + bulletCount+"mL");
+
     sanitizer.destroy()
+    if(coins==0){
+    money=this.physics.add.sprite(100,600,'money');
+money.setCollideWorldBounds(true)
+this.physics.add.collider(money, platforms);
+this.physics.add.overlap(player, money,moneyChange,null,this);
+function moneyChange(){
+    coins+=1000
+    money.destroy()
+
+}
+    }
     add1 =true;
     }
 }
+
+
 
 function highJump(){
     player.setVelocityY(-650)
@@ -211,6 +282,17 @@ function maskChange(){
     mask.destroy();
     shield.visible=true;
     shieldTime=new Date().getTime();
+    if(coins==0){
+        money=this.physics.add.sprite(100,600,'money');
+    money.setCollideWorldBounds(true)
+    this.physics.add.collider(money, platforms);
+    this.physics.add.overlap(player, money,moneyChange,null,this);
+    function moneyChange(){
+        coins+=1000
+        money.destroy()
+    
+    }
+        }
     add2=true
     }
 }
@@ -267,6 +349,26 @@ cursors = this.input.keyboard.createCursorKeys();
 
 
 function update() {
+
+    healthText.setText(': ' + health);
+    coinText.setText(': ' + coins);
+
+if(((health<=30 && health>=20) || (health<=60 && health>=50))&& !medicineSupplied){
+    medicine=this.physics.add.sprite(540,320,'capsules');
+    medicineSupplied=true;
+    medicine.setCollideWorldBounds(true);
+    this.physics.add.collider(platforms,medicine)
+    this.physics.add.collider(jump,medicine)
+    this.physics.add.overlap(player,medicine,medAcquired,null,this)
+function medAcquired(){
+    medicineSupplied=false;
+
+    health=health+35;
+medicine.destroy()
+}
+
+}
+
     if(add1 && add2)added=false;
 
     if(shield.visible && new Date().getTime()-shieldTime>7000){
@@ -287,9 +389,23 @@ function update() {
             child.setVelocityY(Math.random()*400+400)
         
         });score=0
+        this.physics.add.collider(viral, acid,virusChange,null,this);
         this.physics.add.collider(viral, platforms,virusChange,null,this);
 this.physics.add.collider(viral, sidesL,virusChangeL,null,this);
 this.physics.add.collider(viral, sidesR,virusChangeR,null,this);
+
+this.physics.add.overlap(player, viral,virusAttack,null,this);
+
+function virusAttack(){
+    if(!shield.visible){
+    health=health-0.5;
+    if(health<=0){
+        health=0;
+        dead=true;
+    player.setTexture('dead')
+    }
+}
+}
 function virusChange(virus,platforms){
 
     if(virus.body.velocity.x==0)virus.setVelocityX((Math.random()*400+400));
@@ -323,7 +439,9 @@ function virusChange(virus,platforms){
 
     shield.setPosition(player.x,player.y)
 
-
+if(key.Enter.isDown && dead){
+    window.location.href=window.location.href
+}
 
     if(key.Enter.isDown && !this.gameStarted){
         this.gameStarted=true;
@@ -356,38 +474,59 @@ function virusChange(virus,platforms){
 virusVel=true;
         }
         if(key.Space.isDown){
+           // console.log(added)
+
             if(bulletCount>=0 && new Date().getTime()>nextFire ){
-                if(bulletCount>0){
+                
                 bulletCount--;
+                if(bulletCount>0){
+                sanText.setText(': ' + bulletCount+"mL");
+
                 nextFire = new Date().getTime() + fireRate;
                 bullet=this.physics.add.sprite(player.x, player.y, 'bullet')
                 bullet.body.allowGravity=false;
             bullet.setVelocityX(660);
             bulletCol=this.physics.add.overlap(viral, bullet,bulletHit,null,this);
-            console.log(added)
 function bulletHit(virus,bullet){
     score++;
+    total++;
+    scoreText.setText('Score: ' + total);
     bullet.disableBody(true,true);
     virus.disableBody(true,true);
 //bulletCol.destroy();
 
 }
             }else if(!added){
+                sanText.setText(': ' + bulletCount+"mL");
+
                 sanitizer=this.physics.add.sprite(120,70,'sanitizer');
                 sanitizer.setCollideWorldBounds(true)
-                this.physics.add.collider(player, sanitizer,sanTouch,null,this);
+                this.physics.add.overlap(player, sanitizer,sanTouch,null,this);
                 this.physics.add.collider(sanitizer, sanPlatform);
                 function sanTouch(){
                     if(coins>=500){
                     bulletCount=10;
                     coins-=500;
+                    sanText.setText(': ' + bulletCount+"mL");
                     sanitizer.destroy()
+                    if(coins==0){
+                        money=this.physics.add.sprite(100,600,'money');
+                    money.setCollideWorldBounds(true)
+                    this.physics.add.collider(money, platforms);
+                    this.physics.add.overlap(player, money,moneyChange,null,this);
+                    function moneyChange(){
+                        coins+=1000
+                        money.destroy()
+                    
+                    }
+                        }
+
                    add1=true;
                     }
                 }
                 mask=this.physics.add.sprite(950,100,'mask');
                 mask.setCollideWorldBounds(true)
-                this.physics.add.collider(player, mask,maskChange,null,this);
+                this.physics.add.overlap(player, mask,maskChange,null,this);
                 this.physics.add.collider(platforms, mask);
                 this.physics.add.collider(mask, jump);
                 function maskChange(){
@@ -397,12 +536,23 @@ function bulletHit(virus,bullet){
                    mask.destroy();
                     shield.visible=true;
                     shieldTime=new Date().getTime();
+                    if(coins==0){
+                        money=this.physics.add.sprite(100,600,'money');
+                    money.setCollideWorldBounds(true)
+                    this.physics.add.collider(money, platforms);
+                    this.physics.add.overlap(player, money,moneyChange,null,this);
+                    function moneyChange(){
+                        coins+=1000
+                        money.destroy()
+                    
+                    }
+                        }
                     add2=true;
                     }
                 }added=true;add1=false;add2=false;
             }}
         }
-       
+    if(!dead){   
    if (cursors.left.isDown)
    {
       
@@ -420,13 +570,19 @@ function bulletHit(virus,bullet){
        player.setVelocityX(0);
 
        player.anims.play('turn');
+       
    }
 
    if (cursors.up.isDown && player.body.touching.down)
    {
        player.setVelocityY(-430);
    }
-  
+}else{
+    player.setTexture('dead')
+   
+   creators=this.add.image(512,384,'creators')
+  end=this.add.image(512,500,'end').setScale(0.8,0.8)
+}
 
 }
  
