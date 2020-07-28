@@ -28,11 +28,12 @@ module.exports = function (grunt) {
         },
         open: {
             dev: {
-                path: 'http://localhost:8080/index.html'
+                path: 'https://virus-attack.herokuapp.com/index.html'
             }
         }
     });
 
     grunt.registerTask('default', ['concat', 'connect', 'open', 'watch']);
-
+    grunt.registerTask('heroku',
+    ['compass:dist', 'autoprefixer', 'imagemin']);
 }

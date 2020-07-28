@@ -46,7 +46,7 @@ key,
 enter,
 title,
 dead=false,
-scoreText,total=0,medicineSupplied=false,
+scoreText,total=0,medicineSupplied=false,mocked=false,
 nextFire=0,fireRate=200,score=0,oldScore=1,bulletCount=0,health=100,coins=1000,shieldTime=0,added=true,add1=false,add2=false;
 
 
@@ -58,6 +58,8 @@ function preload() {
    this.load.audio('destroy', 'assets/destroy.mp3'); 
    this.load.audio('death', 'assets/death.wav'); 
    this.load.audio('enterkey', 'assets/enterkey.mp3'); 
+   this.load.audio('inst1', 'assets/inst1.mp3'); 
+   this.load.audio('inst2', 'assets/inst2.mp3'); 
 
    this.load.audio('attack', 'assets/attack.wav'); 
    this.load.audio('bgmusic', 'assets/bgmusic.mp3'); 
@@ -102,7 +104,7 @@ function create() {
 
   bgmusic=this.sound.add('bgmusic',{
     mute: false,
-    volume: 1,
+    volume: 0.2,
     rate: 1,
     detune: 0,
     seek: 0,
@@ -114,8 +116,11 @@ bgmusic.play();
   title=this.add.image(512,384,'title')
   enter=this.add.image(512,500,'enter').setScale(0.8,0.8)
 
-  //this.sound.play('instruction');
- 
+  this.sound.play('inst1');
+
+  
+
+
   platforms = this.physics.add.staticGroup();
   sidesL = this.physics.add.staticGroup();
   sidesR = this.physics.add.staticGroup();
@@ -179,7 +184,7 @@ sanitizer.setCollideWorldBounds(true)
 
 
 
- mask=this.physics.add.sprite(950,100,'mask');
+ mask=this.physics.add.sprite(920,100,'mask');
  mask.visible=false;
  mask.body.allowGravity=false;
  mask.setCollideWorldBounds(true);
@@ -561,7 +566,7 @@ function bulletHit(virus,bullet){
                    add1=true;
                     }
                 }
-                mask=this.physics.add.sprite(950,100,'mask');
+                mask=this.physics.add.sprite(920,100,'mask');
                 mask.setCollideWorldBounds(true)
                 this.physics.add.overlap(player, mask,maskChange,null,this);
                 this.physics.add.collider(platforms, mask);
@@ -623,7 +628,13 @@ function bulletHit(virus,bullet){
 }else{
 
     player.setTexture('dead')
-   
+   if(!mocked){
+    this.sound.stopAll();
+
+
+    this.sound.play('inst2');
+    mocked=true;
+   }
    creators=this.add.image(512,384,'creators')
   end=this.add.image(512,500,'end').setScale(0.8,0.8)
 }
