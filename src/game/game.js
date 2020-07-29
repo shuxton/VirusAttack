@@ -71,6 +71,8 @@ function preload() {
    this.load.multiatlas('runL', 'assets/runL_guy.json', 'assets');
 
    this.load.image('drop', 'assets/water.png');
+   this.load.image('controls', 'assets/controls.png');
+
    this.load.image('coin', 'assets/coin.png');
    this.load.image('money', 'assets/money.png');
    this.load.image('heart', 'assets/heart.png');
@@ -115,6 +117,7 @@ bgmusic.play();
 
   title=this.add.image(512,384,'title')
   enter=this.add.image(512,500,'enter').setScale(0.8,0.8)
+controls= this.add.image(512,634,'controls').setScale(0.4,0.4)
 
   this.sound.play('inst1');
 
@@ -129,20 +132,20 @@ bgmusic.play();
   acid=this.physics.add.staticGroup();
   stats=this.physics.add.staticGroup();
 
-  scoreText = this.add.text(35, 20, 'Score: 0', { fontSize: '20px', fill: '#000000',});
+  scoreText = this.add.text(35, 20, 'Score: 0', { fontSize: '40px', fill: '#000000',});
 scoreText.setStroke('#000000', 3);
 
-  stats.create(195,30, 'drop')
-  stats.create(335,30, 'coin')
-  stats.create(475,30, 'heart')
+  stats.create(295,40, 'drop')
+  stats.create(435,40, 'coin')
+  stats.create(575,40, 'heart')
 
-  healthText = this.add.text(490, 20, ': 100', { fontSize: '20px', fill: '#000000' });
+  healthText = this.add.text(590, 30, ': 100', { fontSize: '20px', fill: '#000000' });
   healthText.setStroke('#000000', 2);
 
-  sanText = this.add.text(205, 20, ': 0mL', { fontSize: '20px', fill: '#000000' });
+  sanText = this.add.text(305, 30, ': 0mL', { fontSize: '20px', fill: '#000000' });
   sanText.setStroke('#000000', 2);
 
-  coinText = this.add.text(350, 20, ': 1000', { fontSize: '20px', fill: '#000000' });
+  coinText = this.add.text(450, 30, ': 1000', { fontSize: '20px', fill: '#000000' });
   coinText.setStroke('#000000', 2);
 
 
@@ -486,6 +489,7 @@ if(key.Enter.isDown && dead){
        
        title.destroy();
        enter.destroy();
+       controls.destroy();
      mask.visible=true;
      sanitizer.visible=true;
     
@@ -628,6 +632,9 @@ function bulletHit(virus,bullet){
 }else{
 
     player.setTexture('dead')
+    health=0;
+    coins=0;
+    bulletCount=0;
    if(!mocked){
     this.sound.stopAll();
 
